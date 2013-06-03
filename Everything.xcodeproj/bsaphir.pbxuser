@@ -53,7 +53,7 @@
 		isa = PBXFileReference;
 		lastKnownFileType = "compiled.mach-o.executable";
 		name = testeverything;
-		path = ~/nta/arch/bin/testeverything;
+		path = /Users/bsaphir/nta/arch/bin/testeverything;
 		sourceTree = "<absolute>";
 	};
 	E0AD07C209FFEA8400C6F09F /* anthill */ = {
@@ -97,7 +97,7 @@
 		isa = PBXFileReference;
 		explicitFileType = "compiled.mach-o.executable";
 		name = anthill;
-		path = ~/nta/arch/bin/anthill;
+		path = /Users/bsaphir/nta/arch/bin/anthill;
 		sourceTree = "<absolute>";
 	};
 	E0ADF5C809FFC59000C6F09F /* Project object */ = {

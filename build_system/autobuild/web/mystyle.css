@@ -1,0 +1,17 @@
+# ----------------------------------------------------------------------
+#  Copyright (C) 2006,2007 Numenta Inc. All rights reserved.
+#
+#  The information and source code contained herein is the
+#  exclusive property of Numenta Inc. No part of this software
+#  may be used, reproduced, stored or distributed in any form,
+#  without explicit written authorization from Numenta Inc.
+# ----------------------------------------------------------------------
+
+th {text-align: left; padding-right: 0.2cm; padding-left: 0.2cm}
+td {text-align: left; vertical-align: top; padding-right: 0.2cm; padding-left: 0.2cm}
+td.detail {background-color: #CCFFFF}
+td.pass {background-color: #00FF00}
+td.fail {background-color: #FF0000}
+
+table {border-collapse: collapse}
+

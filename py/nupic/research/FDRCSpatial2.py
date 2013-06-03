@@ -1,23 +1,11 @@
 #!/usr/bin/env python
 # ----------------------------------------------------------------------
-# Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2013, Numenta, Inc.  Unless you have purchased from
-# Numenta, Inc. a separate commercial license for this software code, the
-# following terms and conditions apply:
+#  Copyright (C) 2009, Numenta Inc. All rights reserved.
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses.
-#
-# http://numenta.org/licenses/
+#  The information and source code contained herein is the
+#  exclusive property of Numenta Inc. No part of this software
+#  may be used, reproduced, stored or distributed in any form,
+#  without explicit written authorization from Numenta Inc.
 # ----------------------------------------------------------------------
 
 import sys
@@ -1022,7 +1010,7 @@ class FDRCSpatial2(object):
     #Visualization Invocation, can be done from outside the SP also.
     if False:
 #    if self._runIter<5 or self._runIter>295000 :
-      self.saveStateForCytoscape(input,"~/visualization/data")
+      self.saveStateForCytoscape(input,"/Users/nmikhaylin/visualization/data")
 
     self._runIter += 1
     # Return inference result

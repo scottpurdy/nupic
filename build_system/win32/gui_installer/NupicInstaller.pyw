@@ -13,7 +13,7 @@ import  wx.wizard as wiz
 from SingleInstance import singleInstance
 open('loggggg.txt', 'w').write('*************')
 def out(s):
-  #open('~/Documents/loggggg.txt', 'a').write(str(s) + '\n')
+  #open('c:/Users/Gigi/Documents/loggggg.txt', 'a').write(str(s) + '\n')
   open('loggggg.txt', 'a').write(str(s) + '\n')
   print str(s)
 

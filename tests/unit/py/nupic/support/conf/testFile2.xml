@@ -4,7 +4,7 @@
 <configuration>
   <property>
     <name>database.host</name>
-    <value>TestHost</value>
+    <value>RonsMacBookPro</value>
     <description>Name of the machine running the MySQL database server</description>
   </property>
   <property>

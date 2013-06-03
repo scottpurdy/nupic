@@ -249,7 +249,7 @@ if __name__=='__main__':
             '--target=%s/VisionDemo.setup.exe' % os.environ['USERPROFILE'],
             '--debug']
   else:
-    #--install_dir=c:/nta/install --target=~/VisionDemo.setup.exe --debug
+    #--install_dir=c:/nta/install --target=C:/Users/Gigi/VisionDemo.setup.exe --debug
     argv = sys.argv
 
   main(argv)

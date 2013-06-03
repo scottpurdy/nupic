@@ -1,22 +1,10 @@
 # ----------------------------------------------------------------------
-# Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2013, Numenta, Inc.  Unless you have purchased from
-# Numenta, Inc. a separate commercial license for this software code, the
-# following terms and conditions apply:
+#  Copyright (C) 2010 Numenta Inc. All rights reserved.
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses.
-#
-# http://numenta.org/licenses/
+#  The information and source code contained herein is the
+#  exclusive property of Numenta Inc. No part of this software
+#  may be used, reproduced, stored or distributed in any form,
+#  without explicit written authorization from Numenta Inc.
 # ----------------------------------------------------------------------
 
 
@@ -91,8 +79,10 @@ class MultiEncoder(Encoder):
   ############################################################################
   def addMultipleEncoders(self, fieldEncodings):
     """
-    fieldEncodings is a dict of dicts, mapping field names to the field params
-    dict. Each field params dict has the following keys
+    fieldEncodings -- a dict of dicts, mapping field names to the field params
+                        dict. 
+
+    Each field params dict has the following keys
     1) data fieldname that matches the key ('fieldname')
     2) an encoder type ('type')
     3) and the encoder params (all other keys)

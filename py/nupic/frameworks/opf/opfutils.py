@@ -1,22 +1,10 @@
 # ----------------------------------------------------------------------
-# Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2013, Numenta, Inc.  Unless you have purchased from
-# Numenta, Inc. a separate commercial license for this software code, the
-# following terms and conditions apply:
+#  Copyright (C) 2011 Numenta Inc. All rights reserved.
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses.
-#
-# http://numenta.org/licenses/
+#  The information and source code contained herein is the
+#  exclusive property of Numenta Inc. No part of this software
+#  may be used, reproduced, stored or distributed in any form,
+#  without explicit written authorization from Numenta Inc.
 # ----------------------------------------------------------------------
 
 # This file contains utility functions that are used
@@ -55,8 +43,8 @@ class InferenceElement(Enum(
     "encodings":                "dataEncodings",
     "classification":           "category",
     "classConfidences":         "category",
-    "multiStepPredictions":     "dataRow",
-    "multiStepBestPredictions": "dataRow",
+    "multiStepPredictions":     "dataDict",
+    "multiStepBestPredictions": "dataDict",
   }
 
   __temporalInferenceElements = None
@@ -146,7 +134,6 @@ class InferenceElement(Enum(
     return maxDelay
 
 class InferenceType(Enum("TemporalNextStep",
-                         "Nontemporal",
                          "TemporalClassification",
                          "NontemporalClassification",
                          "TemporalAnomaly",
@@ -195,11 +182,12 @@ class InferenceType(Enum("TemporalNextStep",
 
 class SensorInput(object):
 
-  __slots__ = ("dataRow", "dataEncodings", "sequenceReset", "category")
+  __slots__ = ("dataRow", "dataDict", "dataEncodings", "sequenceReset", "category")
 
-  def __init__(self, dataRow=None, dataEncodings=None,
+  def __init__(self, dataRow=None, dataDict=None, dataEncodings=None,
                sequenceReset=None, category=None):
     self.dataRow = dataRow
+    self.dataDict = dataDict
     self.dataEncodings = dataEncodings
     self.sequenceReset = sequenceReset
     self.category = category
@@ -207,16 +195,19 @@ class SensorInput(object):
   def __repr__(self):
     return "SensorInput("\
           "\tdataRow={0}\n"\
-          "\tdataEncodings={1}\n"\
-          "\tsequenceReset={2}\n"\
-          "\tcategory={3}\n"\
-          ")".format(self.dataRow,
+          "\tdataDict={1}\n"\
+          "\tdataEncodings={2}\n"\
+          "\tsequenceReset={3}\n"\
+          "\tcategory={4}\n"\
+          ")".format(self.dataRow, 
+                     self.dataDict,
                      self.dataEncodings,
                      self.sequenceReset,
                      self.category)
 
   def _asdict(self):
     return dict(dataRow=self.dataRow,
+                dataDict=self.dataDict,
                 dataEncodings=self.dataEncodings,
                 sequenceReset=self.sequenceReset,
                 category=self.category)
@@ -271,7 +262,7 @@ PredictionElement = namedtuple("PredictionElement",
 class ModelResult(object):
 
   __slots__= ("predictionNumber", "rawInput", "sensorInput", "inferences", 
-              "metrics", "predictedFieldIdx")
+              "metrics", "predictedFieldIdx", "predictedFieldName")
 
   def __init__(self,
                predictionNumber=None,
@@ -279,13 +270,15 @@ class ModelResult(object):
                sensorInput=None,
                inferences=None,
                metrics=None,
-               predictedFieldIdx=None ):
+               predictedFieldIdx=None,
+               predictedFieldName=None):
     self.predictionNumber = predictionNumber
     self.rawInput = rawInput
     self.sensorInput = sensorInput
     self.inferences = inferences
     self.metrics = metrics
     self.predictedFieldIdx = predictedFieldIdx
+    self.predictedFieldName = predictedFieldName
 
 
   def __repr__(self):
@@ -296,12 +289,14 @@ class ModelResult(object):
              "\tinferences={3}\n"
              "\tmetrics={4}\n"
              "\tpredictedFieldIdx={5}\n"
+             "\tpredictedFieldName={6}\n"
              ")").format(self.predictionNumber,
                         self.rawInput,
                         self.sensorInput,
                         self.inferences,
                         self.metrics,
-                        self.predictedFieldIdx)
+                        self.predictedFieldIdx,
+                        self.predictedFieldName)
 
 
 ###############################################################################

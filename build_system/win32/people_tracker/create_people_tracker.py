@@ -241,7 +241,7 @@ if __name__=='__main__':
            ]
     #'--debug']
   else:
-    #"--install_dir=c:/nta/install" "--target=~/PeopleTracker.setup.exe" --debug
+    #"--install_dir=c:/nta/install" "--target=C:/Users/Gigi/PeopleTracker.setup.exe" --debug
     argv = sys.argv
 
   main(argv)
