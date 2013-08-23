@@ -13,3 +13,9 @@ struct BitHistory {
   learnIteration @4 :UInt64;
 
 }
+
+struct HistoryList {
+
+  histories @0 :List(BitHistory);
+
+}
