@@ -6,11 +6,6 @@ Trunk.iml
 *.cache
 trunk.sln
 *.m4
-test.out
-*~
-*.DS_Store
-*.swp
-*.coverage*
 
 # personalized nupic configuration file
 .nupic_config
@@ -22,25 +17,6 @@ nbproject/
 *.pydevproject
 .idea
 
-# swarming output files
-data/
-
-# output from integration tests
-inference/
-savedmodels/
-/*.please_wait
-/auto_specials*.csv
-/weighted_mean*.csv
-/test*.txt
-/test*.pkl
-
-# other crap
-*.nta/
-
-html/
-
-Servers/
-
 # Build files
 build/
 include/
@@ -51,15 +27,6 @@ conf/default/nupic-site.xml
 
 # /
 /.gdb_history
-
-# /examples/prediction/
-/examples/prediction/log_hotgym.txt
-/examples/prediction/log.txt
-
-# /examples/prediction/experiments/hotgym/base/
-/examples/prediction/experiments/hotgym/base/networks
-/examples/prediction/experiments/hotgym/base/report.txt
-/examples/prediction/experiments/hotgym/base/results.pkl
 
 # nupic.core repo is located under $NUPIC/extensions/core/
 extensions/core/
