@@ -81,12 +81,12 @@ class PassThroughEncoder(Encoder):
       strInput = input
       input = []
       for c in strInput:
-        if c == '0':
+        if c == "0":
           input.append(0)
-        elif c == '1':
+        elif c == "1":
           input.append(1)
         else:
-          raise ValueError("Input should be string only with 0's and 1's.")
+          raise TypeError("Input should be string only with 0's and 1's.")
     if len(input) != len(output):
       raise ValueError("Different input (%i) and output (%i) sizes." % (
           len(input), len(output)))
