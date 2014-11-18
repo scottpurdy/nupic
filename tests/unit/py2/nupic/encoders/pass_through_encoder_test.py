@@ -67,6 +67,18 @@ class PassThroughEncoderTest(unittest.TestCase):
     self.assertEqual(sum_real, sum_expected)
 
 
+  def testEncodeStringArray(self):
+    """Send bitmap as string of 0's and 1's"""
+    e = self._encoder(self.n, name=self.name)
+    bitmap = "000101000"
+    out = e.encode(bitmap)
+    self.assertEqual(out.sum(), 2)
+
+    x = e.decode(out)
+    self.assertIsInstance(x[0], dict)
+    self.assertTrue(self.name in x[0])
+
+
   def testClosenessScores(self):
     """Compare two bitmaps for closeness"""
     e = self._encoder(self.n, name=self.name)
