@@ -35,10 +35,10 @@ from nupic.encoders import MultiEncoder
 _VERBOSITY = 0  # how chatty the demo should be
 _SEED = 1956  # the random seed used throughout
 _INPUT_FILE_PATH = resource_filename(
-  "nupic.datafiles", "extra/hotgym/rec-center-hourly.csv"
+  __name__, "aba.csv"
 )
 _OUTPUT_PATH = "network-demo-output.csv"
-_NUM_RECORDS = 2000
+_NUM_RECORDS = 1000
 
 # Config field for SPRegion
 SP_PARAMS = {
@@ -85,21 +85,12 @@ def createEncoder():
   """Create the encoder instance for our test and return it."""
   encoder = MultiEncoder()
   encoder.addMultipleEncoders({
-      "consumption": {
-          "clipInput": True,
-          "fieldname": u"consumption",
-          "maxval": 100.0,
-          "minval": 0.0,
-          "n": 50,
-          "name": u"consumption",
-          "type": "ScalarEncoder",
+      "cat": {
+          "fieldname": u"cat",
+          "name": u"cat",
+          "n": 200,
           "w": 21,
-      },
-      "timestamp_timeOfDay": {
-          "fieldname": u"timestamp",
-          "name": u"timestamp_timeOfDay",
-          "timeOfDay": (21, 9.5),
-          "type": "DateEncoder",
+          "type": "SDRCategoryEncoder",
       },
   })
 
@@ -206,8 +197,8 @@ def runNetwork(network, writer):
     # Write out the anomaly score along with the record number and consumption
     # value.
     anomalyScore = anomalyRegion.getOutputData("rawAnomalyScore")[0]
-    consumption = sensorRegion.getOutputData("sourceOut")[0]
-    writer.writerow((i, consumption, anomalyScore))
+    cat = sensorRegion.getOutputData("sourceOut")[0]
+    writer.writerow((i, cat, anomalyScore))
 
     i += 1
 
