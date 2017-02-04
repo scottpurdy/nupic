@@ -217,6 +217,9 @@ class RandomDistributedScalarEncoder(Encoder):
     Given a bucket index, return the list of non-zero bits. If the bucket
     index does not exist, it is created. If the index falls outside our range
     we clip it.
+
+    @param index The bucket index to get non-zero bits for.
+    @returns numpy array of indices of non-zero bits for specified index.
     """
     if index < 0:
       index = 0
@@ -408,7 +411,7 @@ class RandomDistributedScalarEncoder(Encoder):
     """
     # The first bucket index will be _maxBuckets / 2 and bucket indices will be
     # allowed to grow lower or higher as long as they don't become negative.
-    # _maxBuckets is required because the current CLA Classifier assumes bucket
+    # _maxBuckets is required because the current SDR Classifier assumes bucket
     # indices must be non-negative. This normally does not need to be changed
     # but if altered, should be set to an even number.
     self._maxBuckets = maxBuckets

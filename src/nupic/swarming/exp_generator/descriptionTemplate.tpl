@@ -36,8 +36,7 @@ from nupic.frameworks.opf.expdescriptionhelpers import (
 
 from nupic.frameworks.opf.clamodelcallbacks import *
 from nupic.frameworks.opf.metrics import MetricSpec
-from nupic.swarming.hypersearch.experimentutils import (InferenceType,
-                                                        InferenceElement)
+from nupic.swarming.experimentutils import (InferenceType, InferenceElement)
 from nupic.support import aggregationDivide
 
 from nupic.frameworks.opf.opftaskdriver import (
@@ -364,15 +363,15 @@ config = {
 
 
   ##############################################################################
-  # CLAClassifier parameters
+  # SDRClassifier parameters
   ##############################################################################
-  'clRegionName' : 'CLAClassifierRegion',
+  'clRegionName' : 'SDRClassifierRegion',
 
 
   # Classifier diagnostic output verbosity control;
   # 0: silent; [1..6]: increasing levels of verbosity
   #
-  'clVerbosity' : 0,
+  'verbosity' : 0,
 
   # Comma separated list of steps ahead to learn in the classifier.
   'clSteps': $PREDICTION_STEPS,

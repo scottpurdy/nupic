@@ -38,7 +38,6 @@ from operator import itemgetter
 import numpy
 
 from nupic.frameworks.opf.model import Model
-from nupic.algorithms.anomaly import Anomaly
 from nupic.data import SENTINEL_VALUE_FOR_MISSING_DATA
 from nupic.data.fieldmeta import FieldMetaSpecial, FieldMetaInfo
 from nupic.encoders import MultiEncoder, DeltaEncoder
@@ -197,11 +196,6 @@ class CLAModel(Model):
     self._predictedFieldName = None
     self._numFields = None
     # init anomaly
-    windowSize = anomalyParams.get("slidingWindowSize", None)
-    mode = anomalyParams.get("mode", "pure")
-    anomalyThreshold = anomalyParams.get("autoDetectThreshold", None)
-    self._anomalyInst = Anomaly(slidingWindowSize=windowSize, mode=mode,
-                                binaryAnomalyThreshold=anomalyThreshold)
 
     # -----------------------------------------------------------------------
     if network is not None:
@@ -220,7 +214,6 @@ class CLAModel(Model):
     # Initialize Temporal Anomaly detection parameters
     if self.getInferenceType() == InferenceType.TemporalAnomaly:
       self._getTPRegion().setParameter("anomalyMode", True)
-      self._prevPredictedColumns = numpy.array([])
 
     # -----------------------------------------------------------------------
     # This flag, if present tells us not to train the SP network unless
@@ -463,7 +456,7 @@ class CLAModel(Model):
     """
     absoluteValue = None
     bucketIdx = None
-    
+
     if self._predictedFieldName is not None and self._classifierInputEncoder is not None:
       absoluteValue = inputRecord[self._predictedFieldName]
       bucketIdx = self._classifierInputEncoder.getBucketIndices(absoluteValue)[0]
@@ -481,6 +474,8 @@ class CLAModel(Model):
     except StopIteration as e:
       raise Exception("Unexpected StopIteration", e,
                       "ACTUAL TRACEBACK: %s" % traceback.format_exc())
+    finally:
+      sensor.purgeInputLinkBufferHeads()
 
 
   def _spCompute(self):
@@ -493,6 +488,8 @@ class CLAModel(Model):
     sp.setParameter('learningMode', self.isLearningEnabled())
     sp.prepareInputs()
     sp.compute()
+    sp.purgeInputLinkBufferHeads()
+
 
 
   def _tpCompute(self):
@@ -512,6 +509,7 @@ class CLAModel(Model):
     tp.setParameter('learningMode', self.isLearningEnabled())
     tp.prepareInputs()
     tp.compute()
+    tp.purgeInputLinkBufferHeads()
 
 
   def _isReconstructionModel(self):
@@ -569,6 +567,7 @@ class CLAModel(Model):
     classifier.setParameter('learningMode', self.isLearningEnabled())
     classifier.prepareInputs()
     classifier.compute()
+    classifier.purgeInputLinkBufferHeads()
 
     # What we get out is the score for each category. The argmax is
     # then the index of the winning category
@@ -596,12 +595,14 @@ class CLAModel(Model):
     sp.setParameter('topDownMode', True)
     sp.prepareInputs()
     sp.compute()
+    sp.purgeInputLinkBufferHeads()
 
     #--------------------------------------------------
     # Sensor Top-down flow
     sensor.setParameter('topDownMode', True)
     sensor.prepareInputs()
     sensor.compute()
+    sensor.purgeInputLinkBufferHeads()
 
     # Need to call getOutputValues() instead of going through getOutputData()
     # because the return values may contain strings, which cannot be passed
@@ -643,19 +644,12 @@ class CLAModel(Model):
 
       if not self._predictedFieldName in self._input:
         raise ValueError(
-          "Expected predicted field '%s' in input row, but was not found!" 
+          "Expected predicted field '%s' in input row, but was not found!"
           % self._predictedFieldName
         )
       # Calculate the anomaly score using the active columns
       # and previous predicted columns.
-      score = self._anomalyInst.compute(
-                                   activeColumns,
-                                   self._prevPredictedColumns,
-                                   inputValue=self._input[self._predictedFieldName])
-
-      # Store the predicted columns for the next timestep.
-      predictedColumns = tp.getOutputData("topDownOut").nonzero()[0]
-      self._prevPredictedColumns = copy.deepcopy(predictedColumns)
+      score = tp.getOutputData("anomalyScore")[0]
 
       # Calculate the classifier's output and use the result as the anomaly
       # label. Stores as string of results.
@@ -666,6 +660,8 @@ class CLAModel(Model):
             "activeColumnCount", len(activeColumns))
         self._getAnomalyClassifier().prepareInputs()
         self._getAnomalyClassifier().compute()
+        self._getAnomalyClassifier().purgeInputLinkBufferHeads()
+
         labels = self._getAnomalyClassifier().getSelf().getLabelResults()
         inferences[InferenceElement.anomalyLabel] = "%s" % labels
 
@@ -685,7 +681,7 @@ class CLAModel(Model):
 
     Parameters:
     -------------------------------------------------------------------
-    patternNZ:  The input the CLA Classifier as a list of active input indices
+    patternNZ: The input to the CLA Classifier as a list of active input indices
     inputTSRecordIdx: The index of the record as computed from the timestamp
                   and aggregation interval. This normally increments by 1
                   each time unless there are missing records. If there is no
@@ -1270,12 +1266,6 @@ class CLAModel(Model):
       self.__dict__.pop("_CLAModel__encoderNetInfo", None)
       self.__dict__.pop("_CLAModel__nonTemporalNetInfo", None)
       self.__dict__.pop("_CLAModel__temporalNetInfo", None)
-
-
-    # -----------------------------------------------------------------------
-    # Migrate from when Anomaly was not separate class
-    if not hasattr(self, "_anomalyInst"):
-      self._anomalyInst = Anomaly()
 
 
     # This gets filled in during the first infer because it can only be

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -26,7 +25,7 @@ import datetime
 import StringIO
 
 from nupic.data.inference_shifter import InferenceShifter
-from nupic.swarming import object_json as json
+from nupic.swarming.hypersearch import object_json as json
 from nupic.support.unittesthelpers.testcasebase import (TestCaseBase,
                                                         unittest)
 

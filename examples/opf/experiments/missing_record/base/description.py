@@ -212,6 +212,11 @@ config = {
             'synPermActiveInc': 0.1,
 
             'synPermInactiveDec': 0.01,
+
+            # boostStrength controls the strength of boosting. It should be a
+            # a number greater or equal than 0.0. No boosting is applied if
+            # boostStrength=0.0. Boosting encourages efficient usage of columns.
+            'boostStrength': 10.0,
         },
 
         # Controls whether TP is enabled or disabled;
@@ -306,13 +311,13 @@ config = {
 
         'clParams': {
             # Classifier implementation selection.
-            'implementation': 'cpp',
+            'implementation': 'py',
             
-            'regionName' : 'CLAClassifierRegion',
+            'regionName' : 'SDRClassifierRegion',
 
             # Classifier diagnostic output verbosity control;
             # 0: silent; [1..6]: increasing levels of verbosity
-            'clVerbosity' : 0,
+            'verbosity' : 0,
 
             # This controls how fast the classifier learns/forgets. Higher values
             # make it adapt faster and forget older patterns faster.

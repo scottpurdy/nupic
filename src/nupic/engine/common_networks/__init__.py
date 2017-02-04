@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2015, Numenta, Inc.  Unless you have an agreement
@@ -43,7 +42,7 @@ _SP_PARAMS = {
     "synPermConnected": 0.1,
     "synPermActiveInc": 0.0001,
     "synPermInactiveDec": 0.0005,
-    "maxBoost": 1.0,
+    "boostStrength": 0.0,
 }
 
 # Default config fields for TPRegion
@@ -71,7 +70,7 @@ _TP_PARAMS = {
 def createTemporalAnomaly(recordParams, spatialParams=_SP_PARAMS,
                           temporalParams=_TP_PARAMS,
                           verbosity=_VERBOSITY):
-  """Generates a Network with connected RecordSensor, SP, TP, Anomaly regions.
+  """Generates a Network with connected RecordSensor, SP, TP.
 
   This function takes care of generating regions and the canonical links.
   The network has a sensor region reading data from a specified input and
@@ -129,13 +128,6 @@ def createTemporalAnomaly(recordParams, spatialParams=_SP_PARAMS,
   network.link("temporalPoolerRegion", "spatialPoolerRegion", "UniformLink", "",
                srcOutput="topDownOut", destInput="topDownIn")
 
-  # Add the AnomalyRegion on top of the TPRegion
-  network.addRegion("anomalyRegion", "py.AnomalyRegion", json.dumps({}))
-
-  network.link("spatialPoolerRegion", "anomalyRegion", "UniformLink", "",
-               srcOutput="bottomUpOut", destInput="activeColumns")
-  network.link("temporalPoolerRegion", "anomalyRegion", "UniformLink", "",
-               srcOutput="topDownOut", destInput="predictedColumns")
 
   spatialPoolerRegion = network.regions["spatialPoolerRegion"]
 
@@ -153,9 +145,7 @@ def createTemporalAnomaly(recordParams, spatialParams=_SP_PARAMS,
   temporalPoolerRegion.setParameter("learningMode", True)
   # Enable inference mode so we get predictions
   temporalPoolerRegion.setParameter("inferenceMode", True)
-  # Enable anomalyMode to compute the anomaly score. This actually doesn't work
-  # now so doesn't matter. We instead compute the anomaly score based on
-  # topDownOut (predicted columns) and SP bottomUpOut (active columns).
+  # Enable anomalyMode to compute the anomaly score.
   temporalPoolerRegion.setParameter("anomalyMode", True)
 
   return network

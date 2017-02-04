@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -104,8 +103,8 @@ MODEL_PARAMS = {
             'pamLength': 1,
         },
         'clParams': {
-            'regionName' : 'CLAClassifierRegion',
-            'clVerbosity' : 0,
+            'regionName' : 'SDRClassifierRegion',
+            'verbosity' : 0,
             'alpha': 0.005,
             'steps': '1,5',
         },

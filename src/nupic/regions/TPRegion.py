@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
+# Copyright (C) 2013-2016, Numenta, Inc.  Unless you have an agreement
 # with Numenta, Inc., for a separate license for this software code, the
 # following terms and conditions apply:
 #
@@ -22,6 +22,7 @@
 import os
 import numpy
 
+from nupic.algorithms import anomaly
 from nupic.research import TP
 from nupic.research import TP10X2
 from nupic.research import TP_shim
@@ -49,16 +50,15 @@ def _getTPClass(temporalImp):
     return TP10X2.TP10X2
   elif temporalImp == 'tm_py':
     return TP_shim.TPShim
+  elif temporalImp == 'tm_cpp':
+    return TP_shim.TPCPPShim
   elif temporalImp == 'tm_py_fast':
     return TP_shim.FastTPShim
   elif temporalImp == 'monitored_tm_py':
     return TP_shim.MonitoredTPShim
-  elif temporalImp == 'monitored_tm_py_fast':
-    return TP_shim.MonitoredFastTPShim
   else:
     raise RuntimeError("Invalid temporalImp '%s'. Legal values are: 'py', "
-              "'cpp', 'tm_py', 'tm_py_fast',"
-              "'monitored_tm_py', 'monitored_tm_py_fast'" % (temporalImp))
+              "'cpp', 'tm_py', 'monitored_tm_py'" % (temporalImp))
 
 
 
@@ -431,7 +431,7 @@ class TPRegion(PyRegion):
       tpClass = _getTPClass(self.temporalImp)
 
       if self.temporalImp in ['py', 'cpp', 'r',
-                              'tm_py', 'tm_py_fast',
+                              'tm_py', 'tm_cpp', 'tm_py_fast',
                               'monitored_tm_py', 'monitored_tm_py_fast']:
         self._tfdr = tpClass(
              numberOfCols=self.columnCount,
@@ -516,6 +516,9 @@ class TPRegion(PyRegion):
 
     if self.computePredictedActiveCellIndices:
       prevPredictedState = self._tfdr.getPredictedState().reshape(-1).astype('float32')
+    
+    if self.anomalyMode:
+      prevPredictedColumns = self._tfdr.topDownCompute().copy().nonzero()[0]
 
     # Perform inference and/or learning
     tpOutput = self._tfdr.compute(buInputVector, self.learningMode, self.inferenceMode)
@@ -545,6 +548,10 @@ class TPRegion(PyRegion):
       activeLearnCells = self._tfdr.getLearnActiveStateT()
       size = activeLearnCells.shape[0] * activeLearnCells.shape[1]
       outputs['lrnActiveStateT'][:] = activeLearnCells.reshape(size)
+      
+      activeColumns = buInputVector.nonzero()[0]  
+      outputs['anomalyScore'][:] = anomaly.computeRawAnomalyScore(
+        activeColumns, prevPredictedColumns)
 
     if self.computePredictedActiveCellIndices:
       # Reshape so we are dealing with 1D arrays
@@ -552,6 +559,8 @@ class TPRegion(PyRegion):
       activeIndices = numpy.where(activeState != 0)[0]
       predictedIndices= numpy.where(prevPredictedState != 0)[0]
       predictedActiveIndices = numpy.intersect1d(activeIndices, predictedIndices)
+      outputs["activeCells"].fill(0)
+      outputs["activeCells"][activeIndices] = 1
       outputs["predictedActiveCells"].fill(0)
       outputs["predictedActiveCells"][predictedActiveIndices] = 1
 
@@ -938,6 +947,7 @@ class TPRegion(PyRegion):
       import dbgp.client; dbgp.client.brk()
     if self.breakPdb:
       import pdb; pdb.set_trace()
+
 
   #############################################################################
   #

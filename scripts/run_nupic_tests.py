@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -37,7 +36,7 @@ try:
 except DistributionNotFound:
   print "ERROR: `pytest-xdist` is not installed.  Certain testing features" \
     " are not available without it.  The complete list of python" \
-    " requirements can be found in external/common/requirements.txt."
+    " requirements can be found in requirements.txt."
   sys.exit(1)
 
 

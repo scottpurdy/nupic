@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013-15, Numenta, Inc.  Unless you have an agreement
@@ -192,7 +191,7 @@ class CLAClassifierRegion(PyRegion):
           count=0,
           constraints='enum: py, cpp'),
 
-        clVerbosity=dict(
+        verbosity=dict(
           description='An integer that controls the verbosity level, '
                       '0 means no verbose output, increasing integers '
                       'provide more verbosity.',
@@ -212,7 +211,7 @@ class CLAClassifierRegion(PyRegion):
   def __init__(self,
                steps='1',
                alpha=0.001,
-               clVerbosity=0,
+               verbosity=0,
                implementation=None,
                maxCategoryCount=None
                ):
@@ -226,7 +225,7 @@ class CLAClassifierRegion(PyRegion):
     self.steps = steps
     self.stepsList = eval("[%s]" % (steps))
     self.alpha = alpha
-    self.verbosity = clVerbosity
+    self.verbosity = verbosity
 
     # Initialize internal structures
     self._claClassifier = CLAClassifierFactory.create(
@@ -387,10 +386,11 @@ class CLAClassifierRegion(PyRegion):
                                   learn=self.learningMode,
                                   infer=False)
 
-    outputs['actualValues'] = clResults["actualValues"]
+    actualValues = clResults["actualValues"]
+    outputs['actualValues'][:len(actualValues)] = actualValues
     for step in self.stepsList:
       stepIndex = self.stepsList.index(step)
-      categoryOut = clResults["actualValues"][clResults[step].argmax()]
+      categoryOut = actualValues[clResults[step].argmax()]
       outputs['categoriesOut'][stepIndex] = categoryOut
 
       # Flatten the rest of the output. For example:

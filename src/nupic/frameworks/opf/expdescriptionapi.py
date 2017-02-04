@@ -277,6 +277,7 @@ class ExperimentDescriptionAPI(DescriptionIface):
       synPermConnected = config.get('spSynPermConnected', 0.1),
       synPermActiveInc = config.get('synPermActiveInc', 0.1),
       synPermInactiveDec = config.get('synPermInactiveDec', 0.01),
+      boostStrength = config.get('boostStrength', 1.0),
     )
 
     tpParams = dict(
@@ -316,11 +317,18 @@ class ExperimentDescriptionAPI(DescriptionIface):
     if 'clRegionName' in config:
       clParams = dict(
         regionName = config['clRegionName'],
-        clVerbosity = config['clVerbosity'],
+        verbosity = config['verbosity'],
       )
       if config['clRegionName'] == 'KNNClassifierRegion':
         clParams['replaceDuplicates'] = 1
+      elif config['clRegionName'] == 'SDRClassifierRegion':
+        clAlpha = config.get('clAlpha', None)
+        if clAlpha is None:
+          clAlpha = 0.001
+        clParams['alpha'] = clAlpha
+        clParams['steps'] = config.get('clSteps', '1')
       elif config['clRegionName'] == 'CLAClassifierRegion':
+        # deprecated
         clAlpha = config.get('clAlpha', None)
         if clAlpha is None:
           clAlpha = 0.001

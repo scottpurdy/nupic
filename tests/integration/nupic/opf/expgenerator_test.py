@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
@@ -41,8 +40,7 @@ from nupic.support.unittesthelpers.testcasebase import (
   TestCaseBase as HelperTestCaseBase)
 from nupic.swarming import HypersearchWorker
 from nupic.swarming.permutationhelpers import PermuteChoices
-from nupic.swarming.hypersearch.utils import generatePersistentJobGUID, \
-                                             rCopy
+from nupic.swarming.utils import generatePersistentJobGUID, rCopy
 from nupic.frameworks.opf.expdescriptionapi import OpfEnvironment
 from nupic.swarming.exp_generator import ExpGenerator
 from nupic.frameworks.opf.opfutils import (InferenceType,

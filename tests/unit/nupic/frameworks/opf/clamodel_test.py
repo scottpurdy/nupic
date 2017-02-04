@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -99,7 +98,7 @@ class CLAModelTest(unittest.TestCase):
                                            u'autoDetectWaitRecords': 5030},
                         u'clEnable': False,
                         u'clParams': {u'alpha': 0.035828933612158,
-                                      u'clVerbosity': 0,
+                                      u'verbosity': 0,
                                       u'regionName': u'CLAClassifierRegion',
                                       u'steps': u'1'},
                         u'inferenceType': u'TemporalAnomaly',
@@ -122,7 +121,7 @@ class CLAModelTest(unittest.TestCase):
                                       u'columnCount': 2048,
                                       u'globalInhibition': 1,
                                       u'inputWidth': 0,
-                                      u'maxBoost': 1.0,
+                                      u'boostStrength': 0.0,
                                       u'numActiveColumnsPerInhArea': 40,
                                       u'seed': 1956,
                                       u'spVerbosity': 0,

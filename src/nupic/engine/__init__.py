@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
+# Copyright (C) 2013-2017, Numenta, Inc.  Unless you have an agreement
 # with Numenta, Inc., for a separate license for this software code, the
 # following terms and conditions apply:
 #
@@ -22,29 +20,43 @@
 # ----------------------------------------------------------------------
 
 import os
-import sys
 import nupic.bindings.engine_internal as engine
 from nupic.support.lockattributes import LockAttributesMixin
 import functools
 
-basicTypes = ['Byte', 'Int16', 'UInt16', 'Int32', 'UInt32', 'Int64', 'UInt64',
-              'Real32', 'Real64', 'Handle']
+basicTypes = ['Byte',
+              'Int16', 'UInt16',
+              'Int32', 'UInt32',
+              'Int64', 'UInt64',
+              'Real32', 'Real64',
+              'Handle',
+              'Bool']
+
+arrayTypes = ['ByteArray',
+              'Int16Array', 'UInt16Array',
+              'Int32Array', 'UInt32Array',
+              'Int64Array', 'UInt64Array',
+              'Real32Array', 'Real64Array',
+              # No 'HandleArray'
+              'BoolArray']
 
 pyRegions = (
+    ("nupic.bindings.regions.TestNode", "TestNode"),
+    ("nupic.regions.AnomalyLikelihoodRegion", "AnomalyLikelihoodRegion"),
     ("nupic.regions.AnomalyRegion", "AnomalyRegion"),
     ("nupic.regions.CLAClassifierRegion", "CLAClassifierRegion"),
-    ("nupic.regions.ImageSensor", "ImageSensor"),
     ("nupic.regions.KNNAnomalyClassifierRegion", "KNNAnomalyClassifierRegion"),
     ("nupic.regions.KNNClassifierRegion", "KNNClassifierRegion"),
+    ("nupic.regions.PluggableEncoderSensor", "PluggableEncoderSensor"),
     ("nupic.regions.PyRegion", "PyRegion"),
     ("nupic.regions.RecordSensor", "RecordSensor"),
+    ("nupic.regions.SDRClassifierRegion", "SDRClassifierRegion"),
     ("nupic.regions.SPRegion", "SPRegion"),
     ("nupic.regions.SVMClassifierNode", "SVMClassifierNode"),
-    ("nupic.regions.TPRegion", "TPRegion"),
-    ("nupic.bindings.regions.TestNode", "TestNode"),
     ("nupic.regions.TestRegion", "TestRegion"),
+    ("nupic.regions.TPRegion", "TPRegion"),
     ("nupic.regions.UnimportableNode", "UnimportableNode"),
-    ("nupic.regions.extra.GaborNode2", "GaborNode2"))
+)
 
 registeredRegions = False
 
@@ -61,8 +73,6 @@ def registerBuiltInRegions():
 
 registerBuiltInRegions()
 
-# Import all the array types from engine (there is no HandleArray)
-arrayTypes = [t + 'Array' for t in basicTypes[:-1]]
 for a in arrayTypes:
   exec('from %s import %s as %s' % (engine.__name__, a, a))
 
@@ -214,20 +224,6 @@ def ArrayRef(dtype):
   return Array(dtype, None, True)
 
 
-class CollectionIterator(object):
-
-  def __init__(self, collection):
-    self.collection = collection
-    self.index = 0
-
-  def next(self):
-    index = self.index
-    if index == self.collection.getCount():
-      raise StopIteration
-    self.index += 1
-    return self.collection.getByIndex(index)[0]
-
-
 class CollectionWrapper(object):
   """Wrap an nupic::Collection with a dict-like interface
   
@@ -247,7 +243,7 @@ class CollectionWrapper(object):
     self.__class__.__doc__ == collection.__class__.__doc__
 
   def __iter__(self):
-    return CollectionIterator(self.collection)
+    return engine.IterableCollection(self.collection)
 
   def __str__(self):
     return str(self.collection)

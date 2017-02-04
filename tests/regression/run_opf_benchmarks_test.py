@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -46,7 +45,7 @@ from nupic.frameworks.opf.opfutils import InferenceType
 from nupic.support.configuration import Configuration
 from nupic.support.unittesthelpers.testcasebase import unittest
 from nupic.swarming import permutations_runner
-from nupic.swarming.hypersearch.utils import generatePersistentJobGUID
+from nupic.swarming.utils import generatePersistentJobGUID
 
 
 
@@ -537,7 +536,6 @@ class OPFBenchmarkRunner(unittest.TestCase):
 
 
   def readModelWallTime(self, modelInfo):
-    format = "%Y-%m-%d %H:%M:%S"
     startTime = modelInfo.startTime
     if(modelInfo.status == cjdao.ClientJobsDAO.STATUS_COMPLETED):
       endTime = modelInfo.endTime
@@ -558,9 +556,6 @@ class OPFBenchmarkRunner(unittest.TestCase):
     jobsDB = cjdao.ClientJobsDAO.get()
     jobInfo = jobsDB.jobInfo(jobID)
     res = jobInfo.results
-    fieldlist = ['startTime', 'endTime']
-    #(jobStart, jobEnd) = jobsDB.jobGetFields(jobID, fieldlist)
-    #jobTime = jobEnd-jobStart
     results = json.loads(res)
     bestModel = results["bestModel"]
     modelIds = jobsDB.jobGetModelIDs(jobID)

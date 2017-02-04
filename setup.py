@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2015, Numenta, Inc.  Unless you have an agreement
+# Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
 # with Numenta, Inc., for a separate license for this software code, the
 # following terms and conditions apply:
 #
@@ -22,11 +22,12 @@
 """Installation script for Python nupic package."""
 
 import os
-import setuptools
+import pkg_resources
 import sys
 
 from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as BaseTestCommand
+
 
 
 REPO_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -39,6 +40,34 @@ def getVersion():
   """
   with open(os.path.join(REPO_DIR, "VERSION"), "r") as versionFile:
     return versionFile.read().strip()
+
+
+
+def nupicBindingsPrereleaseInstalled():
+  """
+  Make an attempt to determine if a pre-release version of nupic.bindings is
+  installed already.
+
+  @return: boolean
+  """
+  try:
+    nupicDistribution = pkg_resources.get_distribution("nupic.bindings")
+    if pkg_resources.parse_version(nupicDistribution.version).is_prerelease:
+      # A pre-release dev version of nupic.bindings is installed.
+      return True
+  except pkg_resources.DistributionNotFound:
+    pass  # Silently ignore.  The absence of nupic.bindings will be handled by
+    # setuptools by default
+
+  # Also check for nupic.research.bindings
+  try:
+    nupicDistribution = pkg_resources.get_distribution("nupic.research.bindings")
+    return True
+  except pkg_resources.DistributionNotFound:
+    pass  # Silently ignore.  The absence of nupic.bindings will be handled by
+    # setuptools by default
+
+  return False
 
 
 
@@ -86,9 +115,16 @@ def findRequirements():
   Read the requirements.txt file and parse into requirements for setup's
   install_requirements option.
   """
-  requirementsPath = os.path.join(REPO_DIR, "external", "common",
-                                  "requirements.txt")
+  requirementsPath = os.path.join(REPO_DIR, "requirements.txt")
   requirements = parse_file(requirementsPath)
+
+  if nupicBindingsPrereleaseInstalled():
+    # User has a pre-release version of nupic.bindings installed, which is only
+    # possible if the user installed and built nupic.bindings from source and
+    # it is up to the user to decide when to update nupic.bindings.  We'll
+    # quietly remove the entry in requirements.txt so as to not conflate the
+    # two.
+    requirements = [req for req in requirements if "nupic.bindings" not in req]
 
   return requirements
 
@@ -118,7 +154,16 @@ if __name__ == "__main__":
     cmdclass = {"test": TestCommand},
     include_package_data=True,
     zip_safe=False,
-    extras_require = {"capnp": ["pycapnp==0.5.5"]},
+    extras_require = {
+      # Default requirement based on system type
+      ":platform_system=='Linux' or platform_system=='Darwin'":
+        ["pycapnp==0.5.8"],
+
+      # Superseded by platform_system-conditional requirement, but keeping
+      # empty extra for compatibility as recommended by setuptools doc.
+      "capnp": [],
+      "viz": ["networkx", "matplotlib", "pygraphviz"]
+    },
     description="Numenta Platform for Intelligent Computing",
     author="Numenta",
     author_email="help@numenta.org",

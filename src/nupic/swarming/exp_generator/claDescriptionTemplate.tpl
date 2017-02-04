@@ -36,8 +36,7 @@ from nupic.frameworks.opf.expdescriptionhelpers import (
 
 from nupic.frameworks.opf.clamodelcallbacks import *
 from nupic.frameworks.opf.metrics import MetricSpec
-from nupic.swarming.hypersearch.experimentutils import (InferenceType,
-                                                        InferenceElement)
+from nupic.swarming.experimentutils import (InferenceType, InferenceElement)
 from nupic.support import aggregationDivide
 
 from nupic.frameworks.opf.opftaskdriver import (
@@ -148,8 +147,9 @@ config = {
             'synPermActiveInc': 0.05,
 
             'synPermInactiveDec': 0.0005,
-            
-            'maxBoost': 2.0
+
+            # The default boosting strength is set to 0 (no boosting)
+            'boostStrength': 0.0
         },
 
         # Controls whether TP is enabled or disabled;
@@ -228,11 +228,11 @@ config = {
         },
 
         'clParams': {
-            'regionName' : 'CLAClassifierRegion',
+            'regionName' : 'SDRClassifierRegion',
             
             # Classifier diagnostic output verbosity control;
             # 0: silent; [1..6]: increasing levels of verbosity
-            'clVerbosity' : 0,
+            'verbosity' : 0,
 
             # This controls how fast the classifier learns/forgets. Higher values
             # make it adapt faster and forget older patterns faster.

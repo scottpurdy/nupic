@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2015, Numenta, Inc.  Unless you have an agreement
@@ -35,7 +34,6 @@ import math
 
 from pkg_resources import resource_filename
 
-from nupic.algorithms.anomaly import computeRawAnomalyScore
 from nupic.data.file_record_stream import FileRecordStream
 from nupic.engine import Network
 from nupic.encoders import MultiEncoder
@@ -67,7 +65,7 @@ SP_PARAMS = {"spVerbosity": _VERBOSITY,
              "synPermConnected": 0.1,
              "synPermActiveInc": 0.0001,
              "synPermInactiveDec": 0.0005,
-             "maxBoost": 1.0}
+             "boostStrength": 0.0}
 
 # Parameter dict for TPRegion
 TP_PARAMS = {"verbosity": _VERBOSITY,
@@ -221,14 +219,14 @@ def createNetwork(dataSource):
                         'steps': '1',
 
                         # The specific implementation of the classifier to use
-                        # See CLAClassifierFactory#create for options
-                        'implementation': 'cpp',
+                        # See SDRClassifierFactory#create for options
+                        'implementation': 'py',
 
                         # Diagnostic output verbosity control;
                         # 0: silent; [1..6]: increasing levels of verbosity
-                        'clVerbosity': 0}
+                        'verbosity': 0}
 
-  l1Classifier = network.addRegion(_L1_CLASSIFIER, "py.CLAClassifierRegion",
+  l1Classifier = network.addRegion(_L1_CLASSIFIER, "py.SDRClassifierRegion",
                                    json.dumps(classifierParams))
   l1Classifier.setParameter('inferenceMode', True)
   l1Classifier.setParameter('learningMode', True)
@@ -243,7 +241,7 @@ def createNetwork(dataSource):
   createTemporalMemory(network, _L2_TEMPORAL_MEMORY)
   network.link(_L2_SPATIAL_POOLER, _L2_TEMPORAL_MEMORY, linkType, linkParams)
 
-  l2Classifier = network.addRegion(_L2_CLASSIFIER, "py.CLAClassifierRegion",
+  l2Classifier = network.addRegion(_L2_CLASSIFIER, "py.SDRClassifierRegion",
                                    json.dumps(classifierParams))
   l2Classifier.setParameter('inferenceMode', True)
   l2Classifier.setParameter('learningMode', True)

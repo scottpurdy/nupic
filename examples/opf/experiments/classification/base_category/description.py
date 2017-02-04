@@ -190,6 +190,11 @@ config = {
             'synPermActiveInc': 0.05,
 
             'synPermInactiveDec': 0.008,
+
+            # boostStrength controls the strength of boosting. It should be a
+            # a number greater or equal than 0.0. No boosting is applied if
+            # boostStrength=0.0. Boosting encourages efficient usage of columns.
+            'boostStrength': 0.0,
         },
 
         # Controls whether TP is enabled or disabled;
@@ -287,7 +292,7 @@ config = {
 
             # Classifier diagnostic output verbosity control;
             # 0: silent; [1..6]: increasing levels of verbosity
-            'clVerbosity' : 0,
+            'verbosity' : 0,
 
             'distanceMethod': 'pctOverlapOfProto',
             'cellsPerCol': 32,

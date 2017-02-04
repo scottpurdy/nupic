@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
-# Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+# Copyright (C) 2014-2017, Numenta, Inc.  Unless you have an agreement
 # with Numenta, Inc., for a separate license for this software code, the
 # following terms and conditions apply:
 #
@@ -21,7 +20,6 @@
 # ----------------------------------------------------------------------
 
 import sys
-from mock import Mock
 from mock import patch
 import unittest2 as unittest
 
@@ -281,17 +279,13 @@ class NetworkTest(unittest.TestCase):
       print "Time for 1M getParameter calls: %.2f seconds" % (t2 - t1)
 
 
-  @unittest.skipIf(sys.platform.lower().startswith("win"),
-                   "Not supported on Windows, yet!")
   def testTwoRegionNetwork(self):
     n = engine.Network()
 
     region1 = n.addRegion("region1", "TestNode", "")
     region2 = n.addRegion("region2", "TestNode", "")
 
-    names = []
-    for name in n.regions:
-      names.append(name)
+    names = [region[0] for region in n.regions]
     self.assertEqual(names, ['region1', 'region2'])
     print n.getPhases('region1')
     self.assertEqual(n.getPhases('region1'), (0,))
@@ -318,6 +312,42 @@ class NetworkTest(unittest.TestCase):
     # Negative test
     with self.assertRaises(Exception):
       region2.setDimensions(r1dims)
+
+
+  def testDelayedLink(self):
+    n = engine.Network()
+
+    region1 = n.addRegion("region1", "TestNode", "")
+    region2 = n.addRegion("region2", "TestNode", "")
+
+    names = []
+
+    propagationDelay = 2
+    n.link("region1", "region2", "TestFanIn2", "",
+           propagationDelay=propagationDelay)
+
+    r1dims = engine.Dimensions([6, 4])
+    region1.setDimensions(r1dims)
+
+    n.initialize()
+
+    outputArrays = []
+    inputArrays = []
+
+    iterations = propagationDelay + 2
+    for i in xrange(iterations):
+      n.run(1)
+
+      if i < iterations - propagationDelay:
+        outputArrays.append(list(region1.getOutputData("bottomUpOut")))
+
+      if i < propagationDelay:
+        # Pre-initialized delay elements should be arrays of all 0's
+        outputArrays.insert(i, [0.0] * len(outputArrays[0]))
+
+      inputArrays.append(list(region2.getInputData("bottomUpIn")))
+
+    self.assertListEqual(inputArrays, outputArrays)
 
 
   def testInputsAndOutputs(self):
@@ -429,8 +459,3 @@ class NetworkTest(unittest.TestCase):
     self.assertEqual(type(region.getSelf()), TestNode)
 
     self.assertEqual(n.getRegionsByType(SPRegion), [])
-
-
-
-if __name__ == "__main__":
-  unittest.main()

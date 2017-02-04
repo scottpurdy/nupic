@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2015, Numenta, Inc.  Unless you have an agreement
@@ -30,16 +29,50 @@ from nupic.algorithms.KNNClassifier import KNNClassifier
 class KNNClassifierTest(unittest.TestCase):
 
 
+  def testSparsifyVector(self):
+    classifier = KNNClassifier(distanceMethod="norm", distanceNorm=2.0)
+    inputPattern = np.array([0, 1, 3, 7, 11], dtype=np.int32)
+
+    # Each of the 4 tests correspond with the each decisional branch in the
+    # sparsifyVector method
+    #
+    # tests: if not self.relativeThreshold:
+    outputPattern = classifier._sparsifyVector(inputPattern, doWinners=True)
+    self.assertTrue(np.array_equal(np.array([0, 1, 3, 7, 11], dtype=np.int32),
+      outputPattern))
+
+    # tests: elif self.sparseThreshold > 0:
+    classifier = KNNClassifier(distanceMethod="norm", distanceNorm=2.0,
+      relativeThreshold=True, sparseThreshold=.2)
+    outputPattern = classifier._sparsifyVector(inputPattern, doWinners=True)
+    self.assertTrue(np.array_equal(np.array([0, 0, 3, 7, 11], dtype=np.int32),
+      outputPattern))
+
+    # tests: if doWinners:
+    classifier = KNNClassifier(distanceMethod="norm", distanceNorm=2.0,
+      relativeThreshold=True, sparseThreshold=.2, numWinners=2)
+    outputPattern = classifier._sparsifyVector(inputPattern, doWinners=True)
+    self.assertTrue(np.array_equal(np.array([0, 0, 0, 0, 0], dtype=np.int32),
+      outputPattern))
+
+    # tests: Do binarization
+    classifier = KNNClassifier(distanceMethod="norm", distanceNorm=2.0,
+      relativeThreshold=True, sparseThreshold=.2, doBinarization=True)
+    outputPattern = classifier._sparsifyVector(inputPattern, doWinners=True)
+    self.assertTrue(np.array_equal(np.array(
+      [0., 0., 1., 1., 1.], dtype=np.float32), outputPattern))
+
+
   def testDistanceMetrics(self):
     classifier = KNNClassifier(distanceMethod="norm", distanceNorm=2.0)
-  
+
     dimensionality = 40
     protoA = np.array([0, 1, 3, 7, 11], dtype=np.int32)
     protoB = np.array([20, 28, 30], dtype=np.int32)
-    
+
     classifier.learn(protoA, 0, isSparse=dimensionality)
     classifier.learn(protoB, 0, isSparse=dimensionality)
-    
+
     # input is an arbitrary point, close to protoA, orthogonal to protoB
     input = np.zeros(dimensionality)
     input[:4] = 1.0
@@ -54,7 +87,7 @@ class KNNClassifierTest(unittest.TestCase):
       self.assertAlmostEqual(
         actual, predicted, places=5,
         msg="l2 distance norm is not calculated as expected.")
-  
+
     _, _, dist0, _ = classifier.infer(input0)
     self.assertEqual(
       0.0, dist0[0], msg="l2 norm did not calculate 0 distance as expected.")
@@ -67,11 +100,11 @@ class KNNClassifierTest(unittest.TestCase):
       self.assertAlmostEqual(
         actual, predicted, places=5,
         msg="l1 distance norm is not calculated as expected.")
-    
+
     _, _, dist0, _ = classifier.infer(input0)
     self.assertEqual(
       0.0, dist0[0], msg="l1 norm did not calculate 0 distance as expected.")
-  
+
     # Test raw overlap metric
     classifier.distanceMethod = "rawOverlap"
     _, _, dist, _ = classifier.infer(input)
@@ -93,7 +126,7 @@ class KNNClassifierTest(unittest.TestCase):
       self.assertAlmostEqual(
         actual, predicted, places=5,
         msg="pctOverlapOfInput is not calculated as expected.")
-   
+
     _, _, dist0, _ = classifier.infer(input0)
     self.assertEqual(
       0.0, dist0[0],
@@ -152,6 +185,60 @@ class KNNClassifierTest(unittest.TestCase):
     denseB[b] = 1.0
     cat, _, _, _ = classifier.infer(denseB)
     self.assertEquals(cat, 1)
+
+
+  def testMinSparsity(self):
+    """Tests overlap distance with min sparsity"""
+
+    # Require sparsity >= 20%
+    params = {"distanceMethod": "rawOverlap", "minSparsity": 0.2}
+    classifier = KNNClassifier(**params)
+
+    dimensionality = 30
+    a = np.array([1, 3, 7, 11, 13, 17, 19, 23, 29], dtype=np.int32)
+    b = np.array([2, 4, 8, 12, 14, 18, 20, 21, 28], dtype=np.int32)
+
+    # This has 20% sparsity and should be inserted
+    c = np.array([2, 3, 8, 11, 14, 18], dtype=np.int32)
+
+    # This has 17% sparsity and should NOT be inserted
+    d = np.array([2, 3, 8, 11, 18], dtype=np.int32)
+
+    numPatterns = classifier.learn(a, 0, isSparse=dimensionality)
+    self.assertEquals(numPatterns, 1)
+
+    numPatterns = classifier.learn(b, 1, isSparse=dimensionality)
+    self.assertEquals(numPatterns, 2)
+
+    numPatterns = classifier.learn(c, 1, isSparse=dimensionality)
+    self.assertEquals(numPatterns, 3)
+
+    numPatterns = classifier.learn(d, 1, isSparse=dimensionality)
+    self.assertEquals(numPatterns, 3)
+
+    # Test that inference ignores low sparsity vectors but not others
+    e = np.array([2, 4, 5, 6, 8, 12, 14, 18, 20], dtype=np.int32)
+    dense= np.zeros(dimensionality)
+    dense[e] = 1.0
+    cat, inference, _, _ = classifier.infer(dense)
+    self.assertIsNotNone(cat)
+    self.assertGreater(inference.sum(),0.0)
+
+    # This has 20% sparsity and should be used for inference
+    f = np.array([2, 5, 8, 11, 14, 18], dtype=np.int32)
+    dense= np.zeros(dimensionality)
+    dense[f] = 1.0
+    cat, inference, _, _ = classifier.infer(dense)
+    self.assertIsNotNone(cat)
+    self.assertGreater(inference.sum(),0.0)
+
+    # This has 17% sparsity and should return null inference results
+    g = np.array([2, 3, 8, 11, 19], dtype=np.int32)
+    dense= np.zeros(dimensionality)
+    dense[g] = 1.0
+    cat, inference, _, _ = classifier.infer(dense)
+    self.assertIsNone(cat)
+    self.assertEqual(inference.sum(),0.0)
 
 
   def testPartitionIdExcluded(self):
@@ -322,6 +409,7 @@ class KNNClassifierTest(unittest.TestCase):
     self.assertEquals(cat, 1)
 
 
+  @unittest.skipUnless(__debug__, "Only applicable when asserts are enabled")
   def testOverlapDistanceMethodBadSparsity(self):
     """Sparsity (input dimensionality) less than input array"""
     params = {"distanceMethod": "rawOverlap"}
@@ -330,7 +418,7 @@ class KNNClassifierTest(unittest.TestCase):
     a = np.array([1, 3, 7, 11, 13, 17, 19, 23, 29], dtype=np.int32)
 
     # Learn with incorrect dimensionality, less than some bits (23, 29)
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(AssertionError):
       classifier.learn(a, 0, isSparse=20)
 
 
@@ -354,7 +442,7 @@ class KNNClassifierTest(unittest.TestCase):
     self.assertEquals(cat, 0)
 
 
-
+  @unittest.skipUnless(__debug__, "Only applicable when asserts are enabled")
   def testOverlapDistanceMethodStandardUnsorted(self):
     """If sparse representation indices are unsorted expect error."""
     params = {"distanceMethod": "rawOverlap"}
@@ -364,10 +452,10 @@ class KNNClassifierTest(unittest.TestCase):
     a = np.array([29, 3, 7, 11, 13, 17, 19, 23, 1], dtype=np.int32)
     b = np.array([2, 4, 20, 12, 14, 18, 8, 28, 30], dtype=np.int32)
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(AssertionError):
       classifier.learn(a, 0, isSparse=dimensionality)
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(AssertionError):
       classifier.learn(b, 1, isSparse=dimensionality)
 
 

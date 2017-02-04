@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -43,8 +42,7 @@ from nupic.frameworks.opf.metrics import MetricSpec
 from nupic.support import aggregationDivide
 from nupic.support.configuration import Configuration
 from nupic.support.enum import Enum
-from nupic.swarming.hypersearch.experimentutils import (InferenceType,
-                                           InferenceElement)
+from nupic.swarming.experimentutils import (InferenceType, InferenceElement)
 
 
 

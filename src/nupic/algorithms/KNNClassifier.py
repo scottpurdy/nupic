@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013-15, Numenta, Inc.  Unless you have an agreement
@@ -91,7 +90,8 @@ class KNNClassifier(object):
                      verbosity=0,
                      maxStoredPatterns=-1,
                      replaceDuplicates=False,
-                     cellsPerCol=0):
+                     cellsPerCol=0,
+                     minSparsity=0.0):
     """Constructor for the kNN classifier.
 
     @param k (int) The number of nearest neighbors used in the classification of
@@ -174,6 +174,11 @@ class KNNClassifier(object):
         columns, in the same manner as the temporal pooler AND whenever a new
         prototype is stored, only the start cell (first cell) is stored in any
         bursting column
+
+    @param minSparsity (float) If useSparseMemory is set, only vectors with
+        sparsity >= minSparsity will be stored during learning. A value of 0.0
+        implies all vectors will be stored. A value of 0.1 implies only vectors
+        with at least 10% sparsity will be stored
     """
     self.version = KNNCLASSIFIER_VERSION
 
@@ -201,6 +206,7 @@ class KNNClassifier(object):
     self.replaceDuplicates = replaceDuplicates
     self.cellsPerCol = cellsPerCol
     self.maxStoredPatterns = maxStoredPatterns
+    self.minSparsity = minSparsity
     self.clear()
 
 
@@ -399,6 +405,14 @@ class KNNClassifier(object):
       print "  active inputs:", _labeledInput(inputPattern,
                                               cellsPerCol=self.cellsPerCol)
 
+    if isSparse > 0:
+      assert all(inputPattern[i] <= inputPattern[i+1]
+                 for i in xrange(len(inputPattern)-1)), \
+                     "Sparse inputPattern must be sorted."
+      assert all(bit < isSparse for bit in inputPattern), \
+        ("Sparse inputPattern must not index outside the dense "
+         "representation's bounds.")
+
     if rowID is None:
       rowID = self._iterationIdx
 
@@ -534,6 +548,16 @@ class KNNClassifier(object):
               self._categoryRecencyList[rowIdx] = rowID
 
 
+      # If sparsity is too low, we do not want to add this vector
+      if addRow and self.minSparsity > 0.0:
+        if isSparse==0:
+          sparsity = ( float(len(thresholdedInput.nonzero()[0])) /
+                       len(thresholdedInput) )
+        else:
+          sparsity = float(len(inputPattern)) / isSparse
+        if sparsity < self.minSparsity:
+          addRow = False
+
       # Add the new sparse vector to our storage
       if addRow:
         self._protoSizes = None     # need to re-compute
@@ -619,8 +643,9 @@ class KNNClassifier(object):
       winner:           The category with the greatest number of nearest
                         neighbors within the kth nearest neighbors. If the
                         inferenceResult contains no neighbors, the value of
-                        winner is None; this applies to the case of exact
-                        matching.
+                        winner is None. This can happen, for example, in cases
+                        of exact matching, if there are no stored vectors, or if
+                        minSparsity is not met.
       inferenceResult:  A list of length numCategories, each entry contains the
                         number of neighbors within the top k neighbors that
                         are in that category.
@@ -631,9 +656,18 @@ class KNNClassifier(object):
                         distance from the unknown to the nearest prototype of
                         that category. All distances are between 0 and 1.0.
     """
-    if len(self._categoryList) == 0:
-      # No categories learned yet; i.e. first inference w/ online learning.
-      winner = 0
+
+    # Calculate sparsity. If sparsity is too low, we do not want to run
+    # inference with this vector
+    sparsity = 0.0
+    if self.minSparsity > 0.0:
+      sparsity = ( float(len(inputPattern.nonzero()[0])) /
+                   len(inputPattern) )
+
+    if len(self._categoryList) == 0 or sparsity < self.minSparsity:
+      # No categories learned yet; i.e. first inference w/ online learning or
+      # insufficient sparsity
+      winner = None
       inferenceResult = numpy.zeros(1)
       dist = numpy.ones(1)
       categoryDist = numpy.ones(1)
@@ -1021,82 +1055,6 @@ class KNNClassifier(object):
     self._a = None
 
 
-  def leaveOneOutTest(self):
-    """Run leave-one-out testing.
-
-    Returns the total number of samples and the number correctly classified.
-    Ignores invalid vectors (those with a category of -1).
-    Uses partitionIdList, if non-empty, to avoid matching a vector against
-    other vectors that came from the same training sequence.
-    """
-    if self.useSparseMemory:
-      raise Exception("leaveOneOutTest only works with dense memory right now")
-
-    # The basic test is simple, but we need to prepare some data structures to
-    # handle _specificIndexTraining and _partitionIdList
-    categoryListArray = numpy.array(self._categoryList[:self._M.shape[0]])
-    invalidIndices = []
-    if self._specificIndexTraining:
-      # Find valid and invalid vectors using the category list
-      validIndices = (categoryListArray != -1)
-      invalidIndices = (categoryListArray == -1)
-
-    # Convert list of partitions to numpy array if we haven't
-    # already done so.
-
-    # Find the winning vector for each cache vector, excluding itself,
-    # excluding invalid vectors, and excluding other vectors with the
-    # same partition id
-    winners = numpy.zeros(self._M.shape[0], numpy.int32)
-    for i in xrange(self._M.shape[0]):
-      if self._specificIndexTraining \
-          and categoryListArray[i] == -1:  # This is an invalid vector
-        continue
-
-      # Calculate distance between this vector and all others
-      distances = numpy.power(numpy.abs(self._M - self._M[i,:]),
-                              self.distanceNorm)
-      distances = distances.sum(1)
-
-      # Invalidate certain vectors by setting their distance to infinity
-      if self._specificIndexTraining:
-        distances[invalidIndices] = numpy.inf  # Ignore invalid vectors
-
-      # Ignore vectors with same partition id as i
-      distances[self._partitionIdMap.get(
-          self._partitionIdList[i], [])] = numpy.inf
-
-      # Don't match vector with itself
-      distances[i] = numpy.inf
-
-      if self.k == 1:
-        # Take the closest vector as the winner (k=1)
-        winners[i] = distances.argmin()
-      else:
-        # Have the top k winners vote on the category
-        categoryScores = numpy.zeros(categoryListArray.max() + 1)
-        for j in xrange(self.k):
-          winner = distances.argmin()
-          distances[winner] = numpy.inf
-          categoryScores[categoryListArray[winner]] += 1
-        winners[i] = categoryScores.argmax()
-
-    if self.k == 1:
-      # Convert the winners (vector IDs) to their category indices
-      # For k > 1, the winners are already category indices
-      winners = categoryListArray[winners]
-
-    if self._specificIndexTraining:
-      # Count the number of correct categories, ignoring invalid vectors
-      matches = (winners[validIndices] == categoryListArray[validIndices])
-    else:
-      # Count the number of correct categories
-      matches = (winners == categoryListArray)
-
-    # number of samples, number correct
-    return float(matches.shape[0]), matches.sum()
-
-
   def remapCategories(self, mapping):
     """Change the category indices.
 
@@ -1160,11 +1118,14 @@ class KNNClassifier(object):
       pass
     elif state["version"] == 2:
       raise RuntimeError("Invalid deserialization of invalid KNNClassifier"
-          "Verison")
+          "Version")
 
     # Backward compatibility
     if "_partitionIdArray" in state:
       state.pop("_partitionIdArray")
+
+    if "minSparsity" not in state:
+      state["minSparsity"] = 0.0
 
     self.__dict__.update(state)
 

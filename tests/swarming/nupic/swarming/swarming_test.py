@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------
 # Numenta Platform for Intelligent Computing (NuPIC)
 # Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -48,7 +47,7 @@ from nupic.support.unittesthelpers.testcasebase import (unittest,
     TestCaseBase as HelperTestCaseBase)
 from nupic.swarming import HypersearchWorker
 from nupic.swarming.api import getSwarmModelParams, createAndStartSwarm
-from nupic.swarming.hypersearch.utils import generatePersistentJobGUID
+from nupic.swarming.utils import generatePersistentJobGUID
 from nupic.swarming.DummyModelRunner import OPFDummyModelRunner
 
 DEFAULT_JOB_TIMEOUT_SEC = 60 * 2
@@ -292,7 +291,7 @@ class ExperimentTestBaseClass(HelperTestCaseBase):
 
 
       jobParams = {
-        "persistentJobGUID": _generatePersistentJobGUID(),
+        "persistentJobGUID": generatePersistentJobGUID(),
         "description":expDesc,
         "maxModels": maxModels,
         "hsVersion": hsImp,

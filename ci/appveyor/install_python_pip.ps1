@@ -4,7 +4,7 @@
 
 $BASE_URL = "https://www.python.org/ftp/python/"
 
-$GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
+$GET_PIP_URL = "http://releases.numenta.org/pip/1ebd3cb7a5a3073058d0c9552ab074bd/get-pip.py"
 $GET_PIP_PATH = "C:\get-pip.py"
 
 $GET_NUMPY_URL = "https://bitbucket.org/carlkl/mingw-w64-for-python/downloads/numpy-1.9.1+openblas-cp27-none-win_amd64.whl"
@@ -62,8 +62,8 @@ function InstallPython ($python_version, $architecture, $python_home) {
 
 
 function InstallPip ($python_home) {
-    $pip_path = $python_home + "/Scripts/pip.exe"
-    $python_path = $python_home + "/python.exe"
+    $pip_path = $python_home + "\Scripts\pip.exe"
+    $python_path = $python_home + "\python.exe"
     if ( $(Try { Test-Path $pip_path.trim() } Catch { $false }) ) {
         Write-Host "pip already installed at " $pip_path
         return $false
@@ -78,11 +78,11 @@ function InstallPip ($python_home) {
 }
 
 function main () {
-    InstallPython $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHONPATH
-    InstallPip $env:PYTHONPATH
+    InstallPython $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHONHOME
+    InstallPip $env:PYTHONHOME
 
-    $python_path = $env:PYTHONPATH + "/python.exe"
-    $pip_path = $env:PYTHONPATH + "/Scripts/pip.exe"
+    $python_path = $env:PYTHONHOME + "\python.exe"
+    $pip_path = $env:PYTHONHOME + "\Scripts\pip.exe"
 
     Write-Host "python -m pip install --upgrade pip"
     & $python_path -m pip install --upgrade pip
