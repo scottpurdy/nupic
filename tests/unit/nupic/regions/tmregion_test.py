@@ -27,24 +27,25 @@ import sys
 import tempfile
 import unittest
 
+import capnp
 import numpy
 
 from nupic.data.file_record_stream import FileRecordStream
 from nupic.encoders import MultiEncoder, ScalarEncoder
 from nupic.engine import Network
+from nupic.regions import tm_region_proto_capnp
 
 _INPUT_FILE_PATH = pkg_resources.resource_filename(
   "nupic.datafiles", "extra/hotgym/rec-center-hourly.csv"
 )
 
 TM_PARAMS = {
-    "temporalImp": "cpp",
+    "temporalImp": "tm_py",
     "verbosity": 0,
     "columnCount": 20,
     "cellsPerColumn": 3,
     "inputWidth": 20,
     "seed": 1987,
-    "temporalImp": "cpp",
     "newSynapseCount": 3,
     "maxSynapsesPerSegment": 5,
     "maxSegmentsPerCell": 1,
@@ -96,13 +97,19 @@ class TMRegionTest(unittest.TestCase):
     net1.initialize()
     net1.run(5)
 
+    print dir(tm_region_proto_capnp)
+    message1 = tm_region_proto_capnp.TMRegionProto.new_message()
+    net1.write(message1)
+
     f = tempfile.TemporaryFile()
     try:
-      net1.write(f)
+      message1.write(f)
       f.seek(0)
-      net2 = Network.read(f)
+      message2 = tm_region_proto_capnp.TMRegionProto.read(f)
     finally:
       f.close()
+
+    net2 = Network.read(message2)
 
     net1.run(5)
     net2.run(5)

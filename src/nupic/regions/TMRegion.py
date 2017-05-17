@@ -739,6 +739,19 @@ class TMRegion(PyRegion):
     else:
       raise Exception('Unknown parameter: ' + parameterName)
 
+
+  def write(self, proto):
+    pass
+
+
+  @classmethod
+  def read(cls, proto):
+    region = cls.__new__()
+
+    # TODO
+
+    return region
+
   #############################################################################
   #
   # Commands
